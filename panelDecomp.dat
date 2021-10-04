@@ -1,0 +1,17 @@
+                                       XXXXXXXXXXX
+Tipo de Sinal                                    5 (1 - eletrico; 2 - audio; 3 - ruido)
+Tipo de MP                                       3 (0 - Automático, 1 - MP Clássico, 2 - Kolasa, 3 - Kolasa Modified)
+Dicionario                                       0 (0 - Todos, 1 - Exponenciais, 2 - Senoides, 3 - Gabor, 4 - Impulsos)
+Usa OMP                                          0
+Usa rede                                         0
+Num. maximo de iteracoes                        50
+Coeficiente suporte temporal                  1.05
+Usa heuristica bloco subsequente                 0
+Coef bloco subsequente                        1.15
+Atomo continuado                                 0
+Suporte temporal                                 0
+Otimiza decaimento                               0
+Approximation ratio target                       0
+SNR target                             99999999999
+print decomp stages                              0
+Carrega arquivo RD                               0
