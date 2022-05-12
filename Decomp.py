@@ -3,7 +3,7 @@ import timeit
 import numpy as np
 from numpy import linalg
 from numpy.core.shape_base import block
-from numpy.linalg.linalg import norm
+#from numpy.linalg.linalg import norm
 import pandas as pd
 import matplotlib.pyplot as plt
 #import seaborn as sns
@@ -183,8 +183,8 @@ def matchingPursuit(residue, chosenParm ,dicSize,dicData,decompData,step,chosenD
                         realAtomWin[k]=gabDic.getRealAtom()[k]
                         realAtomWin[(2*N-1-k)]=gabDic.getRealAtom()[k]
                     #if j==0:
-                    #plt.plot(realAtomWin)
-                    #plt.show()
+                    #    plt.plot(realAtomWin)
+                    #    plt.show()
                     
                     # Complex Atom
 
@@ -258,6 +258,7 @@ def matchingPursuit(residue, chosenParm ,dicSize,dicData,decompData,step,chosenD
 
             if (dicType == 6): #Dicionário de Bateman
                 if (MPType == 1):
+                    print("Entrou MP1")
                     
                     for u in np.arange(N):
                         parm.setAtom(rho=decay,eta=rise,u=u, b=N-1,dicType=6)
@@ -282,13 +283,14 @@ def matchingPursuit(residue, chosenParm ,dicSize,dicData,decompData,step,chosenD
                     
                     # Real Atom
                     parm.setAtom(rho=decay,eta=rise,b=N-1,dicType=6)
+                    
                     #bateDic.setRealAtom(parm,N)
                     #realAtom=bateDic.getRealAtom()
                     bateDic.setRealAtom(parm,2*N)
                     realAtomWin=bateDic.getRealAtom()
-                    #if decay==0.40 and rise==0.58:
-                     #   plt.plot(realAtomWin)
-                     #   plt.show()
+                    if decay==0.25 and rise==0.4:
+                        plt.plot(realAtomWin)
+                        plt.show()
                     
                     # Complex Atom
                    # print(np.dot(realAtom,residue))
@@ -406,7 +408,7 @@ def fastMPKolasaModified(residue,maxInnerProd,chosenOptPhase,chosenTau,N,decincA
     
     #f2=open('LogKolasaModified.dat','a')
 
-
+    f=open('MPLog.out','a')
 
     w1=np.zeros(2*N,dtype='complex') #w1=np.zeros(2*N)
     w2=np.zeros(2*N,dtype='complex')
@@ -490,8 +492,13 @@ def fastMPKolasaModified(residue,maxInnerProd,chosenOptPhase,chosenTau,N,decincA
         #f2.write("innerProd - {ip},   Tau : {tau},   optPhase : {phase},   xp:{xp} ,   xq:{xq}  pp:{pp} , qq:{qq} ,  pq:{pq} \n "
         #.format(ip=maxInnerProd,tau=chosenTau,phase=chosenOptPhase,xp=innerProd_xp,xq=innerProd_xq,pp=innerProd_pp,qq=innerProd_qq,pq=innerProd_pq))
 
-    #f2.close
+        #f2.close
+        f.write(f"IP : {innerProd:15.8f}  rho : {1/s:15.8f} xi : {xi:15.8f} optph - {chosenOptPhase:15.8f} ")
+        f.write(f"chosenTau : {chosenTau:15.8f}  tau : {tau:15.8f} xp : {innerProd_xp:15.8f} xq - {innerProd_xq:15.8f} ")
+        f.write(f"pp : {innerProd_pp:15.8f}  qq : {innerProd_qq:15.8f} pq : {innerProd_pq:15.8f} maxIp - {maxInnerProd:15.8f}\n ")
+    f.close()
 
+     
         
     return maxInnerProd,chosenTau,chosenOptPhase     
 
@@ -623,7 +630,7 @@ def updateResidue(residue,dicSize,parm):
 
     
 
-inputFile = 'Sample_Sigmo.wav'
+inputFile = 'eda1.wav'
 #inputFile= 'Sample_Bate.wav'
 def decompEDA(inputFile):
 
@@ -668,7 +675,7 @@ def decompEDA(inputFile):
     f.write(f"Final Block:          {finalBlock:5d}\n")
     f.write(f"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n")
     f.write(f"Signal:               {1:5d}\n")
-    f.write(f"Norm:            {linalg.norm(origSignal):10.5f}\n")
+    f.write(f"Norm:            {np.linalg.norm(origSignal):10.5f}\n")
 
     nMaxStep=decompData.getMaxIter()
 
@@ -679,7 +686,7 @@ def decompEDA(inputFile):
     signal=np.zeros(dicSize)
   
     #step=0
-    norm=0
+    #norm=0
 
     chosenParm=AtomClass.Atom()
 
@@ -725,14 +732,14 @@ def decompEDA(inputFile):
             #plt.plot(residue)
             #plt.title("{norm}".format(norm=np.linalg.norm(residue)))
             #plt.show()
-            
+            print("initBlockNorm:  {blockNorm}".format(blockNorm=initBlockNorm))
 
             signal=residue
             
 
             f.write("--------------------------------------------------------------\n")
             f.write("Block:                    {b}\n".format(b=j+1))
-            f.write("Norm:                     {norm}\n".format(norm=initBlockNorm))
+            f.write("Norm:                     {blocknorm}\n".format(blocknorm=initBlockNorm))
             f.write("No.        Coef.           Decaying        Freq            Phase        Tau    Ti    Tf      Rising      dicType PrevAtom  AppRatio   meanAppRat befSup     aftSup     normRatio  SNR(dB)   chosenNet\n")
             
 
@@ -769,7 +776,7 @@ def decompEDA(inputFile):
                 f.write(f" {chosenParm.xi:15.8f} {chosenParm.phase:15.8f} {chosenParm.u:5d}")
                 f.write(f" {chosenParm.a:5d} {chosenParm.b:5d} {chosenParm.eta:15.8f}")
                 f.write(f" {int(chosenParm.dicType):5d}    {int(chosenParm.prevAtom):5d}    {approxRatio[step%L]:15.7f} {meanApproxRatio:10.7f}")
-                f.write(f" {befSupInnerP:15.7f} {aftSupInnerP:15.7f} {norm/initBlockNorm:15.7f} {SNR:10.7f} {chosenNet:5d}\n")
+                f.write(f" {befSupInnerP:15.7f} {aftSupInnerP:15.7f} {np.linalg.norm(origSignal)/initBlockNorm:15.7f} {SNR:10.7f} {chosenNet:5d}\n")
                                 
 
                 if ((meanApproxRatio <= tolAppRatio) 

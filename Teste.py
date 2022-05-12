@@ -14,6 +14,10 @@ import Dictionary
 import PanelFiles
 import AtomClass
 import soundfile as sf
+from scipy import signal
+from scipy.stats import chi2
+from scipy.special import gamma
+
 
 
 def setAtom1(parm):
@@ -60,15 +64,71 @@ f.write(f"{indice:3d}  {resi:.8f} {coef:.8f} \n")
 f.write(f"{indice*10:3d}   {resi:.8f} {coef:.8f} \n")
 f.close()
 '''
-Fs, origSignal = wavfile.read('eda1.wav')
-print(np.linalg.norm(origSignal[0:512]))
+#Fs, origSignal = wavfile.read('eda1.wav')
+#print(np.linalg.norm(origSignal[0:512]))
 
-m_norm=float64(0.0)
-for i in np.arange(len(origSignal)):
-    m_norm += float64(origSignal[i])*float64(origSignal[i])
-m_norm=np.sqrt(m_norm)
-print(m_norm)
-print(type(m_norm))
+#m_norm=float64(0.0)
+#for i in np.arange(len(origSignal)):
+#    m_norm += float64(origSignal[i])*float64(origSignal[i])
+#m_norm=np.sqrt(m_norm)
+#print(m_norm)
+#print(type(m_norm))
 
-data, fs = sf.read('eda1.wav')
-print(np.linalg.norm(data))
+#data, fs = sf.read('eda1.wav')
+#print(np.linalg.norm(data))
+N=512
+eta=2.9
+u=23
+s=2.9
+xi=0
+phi=0
+rho=2.7
+a=0
+b=512
+realAtom = np.zeros(N)
+realAtom2 = np.zeros(N)
+realAtomSigmo = np.zeros(N)
+
+for n in np.arange(N):
+            #self.realAtom[n]=0
+    if n<u or n>b:
+        realAtomSigmo[n] = 0
+    else:
+        if(xi != 0):
+            realAtomSigmo[n] = chi2.pdf(n,rho,u,eta)*np.cos(xi*n+phi) 
+        else:
+            realAtomSigmo[n] = (math.exp(-(s*(n-u)/rho))/(1+(s*(n-u)/eta)**-2)**2) * math.cos(phi)
+                    #print(self.realAtom[n])
+realAtomSigmo = realAtomSigmo/np.linalg.norm(realAtomSigmo) 
+'''
+for n in np.arange(1,N):
+    realAtom[n-1] = ((math.pow(((n-u)/s),((eta/2)-1))*math.exp(-(((n-u)/s)/2)))/s*(math.pow(2,(eta/2))*gamma(eta/2)))#*np.cos(xi*n+phi)
+
+
+
+
+
+if (np.linalg.norm(realAtom)!=0):
+    normr = np.linalg.norm(realAtom)
+    realAtom = realAtom/np.linalg.norm(realAtom) 
+
+realAtom2 = chi2.pdf(np.arange(N),eta,u,s)
+if (np.linalg.norm(realAtom2)!=0):
+    normr = np.linalg.norm(realAtom2)
+    realAtom2 = realAtom2/np.linalg.norm(realAtom2) 
+
+
+print(realAtom[2])
+print(realAtom2[2])
+
+
+plt.plot(realAtom)
+plt.show()
+
+plt.plot(realAtom2)
+plt.show()
+'''
+
+plt.plot(realAtomSigmo)
+plt.show()
+print(realAtomSigmo)

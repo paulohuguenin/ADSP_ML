@@ -685,17 +685,20 @@ class ChiDic():
         self.xi = parameters.xi
         self.phi = parameters.phase
         self.s = parameters.s
+        self.b = parameters.b
         
         self.complexAtom = np.zeros(N,dtype = 'complex')
         
         for n in np.arange(N):
            #for k in np.arange(self.rho):
-            if self.xi != 0:
-
-                self.complexAtom[n] = complex(chi2.pdf(n,self.rho,self.u,self.s)*math.cos(self.xi*n+self.phi),
-                chi2.pdf(n,self.rho)*math.sin(self.xi*n+self.phi))
+            if n<self.u or n>self.b:
+                self.realAtom[n] = 0
             else:
-                self.complexAtom[n] = complex(1.0,0)
+                if (self.xi != 0):
+                    self.complexAtom[n] = complex(chi2.pdf(n,self.rho,self.u,self.s)*math.cos(self.xi*n+self.phi),
+                    chi2.pdf(n,self.rho)*math.sin(self.xi*n+self.phi))
+                else:
+                    self.complexAtom[n] = complex(1.0,0)
 
     def getComplexAtom(self):
         return self.complexAtom
@@ -710,10 +713,10 @@ class ChiDic():
         
         self.realAtom = np.zeros(N)
         #for n in np.arange(N):
-        #   self.realAtom[n] = ((n-self.u)^((self.eta/2)-1)*np.exp(-(n-self.u)/2))/(self.s*2^(self.eta/2)*gamma(self.eta/2))*np.cos(self.xi*n+self.phi)
+           #self.realAtom[n] = ((n-self.u)^((self.eta/2)-1)*np.exp(-(n-self.u)/2))/(self.s*2^(self.eta/2)*gamma(self.eta/2))*np.cos(self.xi*n+self.phi)
         
         n=np.arange(N)
-        self.realAtom = chi2.pdf(n,self.eta,self.u,self.s)*np.cos(self.xi*n+self.phi) 
+        self.realAtom = chi2.pdf(n,self.rho,self.u,self.eta)*np.cos(self.xi*n+self.phi) 
         
         if (np.linalg.norm(self.realAtom)!=0):
             self.normr = np.linalg.norm(self.realAtom)

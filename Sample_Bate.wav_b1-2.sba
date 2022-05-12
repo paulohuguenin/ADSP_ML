@@ -1,0 +1,25 @@
+Sign. Type :              5
+No. Signals:              1
+Signal Size:           1024
+Block Hop:              512
+Block Size:             512
+Samp. Freq :           8.00
+Init. Block:              1
+Final Block:              2
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+Signal:                   1
+Norm:               1.41416
+--------------------------------------------------------------
+Block:                    1
+Norm:                     0.9999594461331641
+No.        Coef.           Decaying        Freq            Phase        Tau    Ti    Tf      Rising      dicType PrevAtom  AppRatio   meanAppRat befSup     aftSup     normRatio  SNR(dB)   chosenNet
+    1      0.67576963      0.20000000      0.00000000      0.00000000   260   260   511      0.00000000     4        0          0.9556826  0.1061870       0.0000000       0.0000000       0.0000000 10.8740305     0
+    2      0.22634372   1000.00000000      0.00000000      0.00000000   258   258   511      0.00000000     4        0          0.7915668  0.1941388       0.0000000       0.0000000       0.0000000 11.6598635     0
+99999
+--------------------------------------------------------------
+Block:                    2
+Norm:                     0.9999594461331641
+No.        Coef.           Decaying        Freq            Phase        Tau    Ti    Tf      Rising      dicType PrevAtom  AppRatio   meanAppRat befSup     aftSup     normRatio  SNR(dB)   chosenNet
+    1      0.67576963      0.20000000      0.00000000      0.00000000   260   260   511      0.00000000     4        0          0.9556826  0.1941388       0.0000000       0.0000000       0.0000000 10.8740305     0
+    2      0.22634372   1000.00000000      0.00000000      0.00000000   258   258   511      0.00000000     4        0          0.7915668  0.1941388       0.0000000       0.0000000       0.0000000 11.6598635     0
+99999
