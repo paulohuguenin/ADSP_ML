@@ -1,3 +1,4 @@
+import argparse
 from typing import final
 import timeit 
 import numpy as np
@@ -17,6 +18,9 @@ import soundfile as sf
 import tensorflow as tf
 from tensorflow import keras
 from keras.models import load_model
+from scipy.io import wavfile
+from scipy import signal
+from scipy.signal.filter_design import normalize
 import Dictionary
 import PanelFiles
 import AtomClass
@@ -173,6 +177,14 @@ def matchingPursuit(residue, chosenParm ,dicSize,dicData,decompData,step,chosenD
                 xi_vec=np.array([(2*math.pi/Fs)*(freqi*math.pow(2.0,(i-1)/24)) for i in range(1,Nfreq)])
                 xi_vec=np.insert(xi_vec,0,0.0)
             
+            if (dicType == 3): #Dicionáriuo de Impulsos
+                for k in np.arange(N):
+
+                    if (np.abs(residue[k]) > np.abs(maxInnerProd)):
+                        maxInnerProd = residue[k]
+                        parm.setAtom(u=k,dicType=3)
+                        setParameters(chosenParm,dicType,maxInnerProd,0,0,chosenOptPhase,k,k,k,0)
+
             if (dicType == 4): #Dicionário de Gabor
 
                 if (MPType == 3):
@@ -183,8 +195,8 @@ def matchingPursuit(residue, chosenParm ,dicSize,dicData,decompData,step,chosenD
                         realAtomWin[k]=gabDic.getRealAtom()[k]
                         realAtomWin[(2*N-1-k)]=gabDic.getRealAtom()[k]
                     #if j==0:
-                    #    plt.plot(realAtomWin)
-                    #    plt.show()
+                    # plt.plot(gabDic.getRealAtom())
+                    # plt.show()
                     
                     # Complex Atom
 
@@ -288,9 +300,6 @@ def matchingPursuit(residue, chosenParm ,dicSize,dicData,decompData,step,chosenD
                     #realAtom=bateDic.getRealAtom()
                     bateDic.setRealAtom(parm,2*N)
                     realAtomWin=bateDic.getRealAtom()
-                    if decay==0.25 and rise==0.4:
-                        plt.plot(realAtomWin)
-                        plt.show()
                     
                     # Complex Atom
                    # print(np.dot(realAtom,residue))
@@ -408,7 +417,7 @@ def fastMPKolasaModified(residue,maxInnerProd,chosenOptPhase,chosenTau,N,decincA
     
     #f2=open('LogKolasaModified.dat','a')
 
-    f=open('MPLog.out','a')
+    #f=open('MPLog.out','a')
 
     w1=np.zeros(2*N,dtype='complex') #w1=np.zeros(2*N)
     w2=np.zeros(2*N,dtype='complex')
@@ -423,20 +432,20 @@ def fastMPKolasaModified(residue,maxInnerProd,chosenOptPhase,chosenTau,N,decincA
             z2[i]=complex(complexAtom2Xi[i].real,complexAtom2Xi[i].imag)
     else:
         for i in np.arange(len(realAtomWin)):
-            w1[i]=complex(realAtomWin[N-1-i],0)
-            w2[i]=complex(realAtomWin[N-1-i]*realAtomWin[N-1-i])
+            w1[i]=complex(realAtomWin[2*N-1-i],0)
+            w2[i]=complex(realAtomWin[2*N-1-i]*realAtomWin[2*N-1-i])
         for i in np.arange(len(complexAtomXi)):
             z1[i]=complex(residue[i],complexAtomXi[i].imag*residue[i])
             z2[i]=complex(complexAtom2Xi[i].real,complexAtom2Xi[i].imag)
-    #plt.plot(w1.real)
-    #plt.show()
 
-    #plt.plot(z1.real)
+    #plt.plot(w1.real)
     #plt.show()
     
     conv_zw1=np.fft.ifft( np.fft.fft(w1)*np.fft.fft(z1) )
     conv_zw2=np.fft.ifft( np.fft.fft(w2)*np.fft.fft(z2) ) 
 
+    #plt.plot(conv_zw1.real)
+    #plt.show()
 
     #conv_zw1=
     
@@ -452,11 +461,11 @@ def fastMPKolasaModified(residue,maxInnerProd,chosenOptPhase,chosenTau,N,decincA
 
     for tau in np.arange(0,N,int(deltaTau)):
 
-        innerProd_xp=conv_zw1[tau+N-1].real #/ (2*N)
-        innerProd_xq=conv_zw1[tau+N-1].imag #/ (2*N)
-        innerProd_pp=0.5*(conv_zxi0_w2[tau +N-1] + conv_zw2[tau+N-1].real)# / (2*N)
-        innerProd_qq=0.5*(conv_zxi0_w2[tau +N-1] - conv_zw2[tau+N-1].real) #/ (2*N)
-        innerProd_pq=0.5*(conv_zw2[tau +N-1].imag ) #/ (2*N)
+        innerProd_xp=conv_zw1[tau-1].real #/ (2*N)
+        innerProd_xq=conv_zw1[tau-1].imag #/ (2*N)
+        innerProd_pp=0.5*(conv_zxi0_w2[tau-1] + conv_zw2[tau-1].real)# / (2*N)
+        innerProd_qq=0.5*(conv_zxi0_w2[tau-1] - conv_zw2[tau-1].real) #/ (2*N)
+        innerProd_pq=0.5*(conv_zw2[tau-1].imag ) #/ (2*N)
         
         a1 = innerProd_xp * innerProd_qq - innerProd_xq * innerProd_pq
         b1 = innerProd_xq * innerProd_pp - innerProd_xp * innerProd_pq
@@ -493,10 +502,10 @@ def fastMPKolasaModified(residue,maxInnerProd,chosenOptPhase,chosenTau,N,decincA
         #.format(ip=maxInnerProd,tau=chosenTau,phase=chosenOptPhase,xp=innerProd_xp,xq=innerProd_xq,pp=innerProd_pp,qq=innerProd_qq,pq=innerProd_pq))
 
         #f2.close
-        f.write(f"IP : {innerProd:15.8f}  rho : {1/s:15.8f} xi : {xi:15.8f} optph - {chosenOptPhase:15.8f} ")
-        f.write(f"chosenTau : {chosenTau:15.8f}  tau : {tau:15.8f} xp : {innerProd_xp:15.8f} xq - {innerProd_xq:15.8f} ")
-        f.write(f"pp : {innerProd_pp:15.8f}  qq : {innerProd_qq:15.8f} pq : {innerProd_pq:15.8f} maxIp - {maxInnerProd:15.8f}\n ")
-    f.close()
+    #     f.write(f"IP : {innerProd:15.8f}  rho : {1/s:15.8f} xi : {xi:15.8f} optph - {chosenOptPhase:15.8f} ")
+    #     f.write(f"chosenTau : {chosenTau:15.8f}  tau : {tau:15.8f} xp : {innerProd_xp:15.8f} xq - {innerProd_xq:15.8f} ")
+    #     f.write(f"pp : {innerProd_pp:15.8f}  qq : {innerProd_qq:15.8f} pq : {innerProd_pq:15.8f} maxIp - {maxInnerProd:15.8f}\n ")
+    # f.close()
 
      
         
@@ -544,8 +553,9 @@ def computeOptimumPhase(residue,opt_phase,innerProd,signalSize,xi,complexAtom,fi
 
 
 def setParameters(parm,dicType,innerProd,s,xi,optPhase,tau,a,b,eta):
-    
-    if (dicType == 4):
+    if (dicType == 3):
+        parm.setAtom(rho=0,xi=xi,phase=optPhase,u=tau,a=a,b=b,eta=eta,innerProd=innerProd,s=s,dicType=dicType)
+    elif (dicType == 4):
         parm.setAtom(rho=1/s,xi=xi,phase=optPhase,u=tau,a=a,b=b,eta=eta,innerProd=innerProd,s=s,dicType=dicType)
     elif (dicType == 5):
         parm.setAtom(rho=1/s,xi=xi,phase=optPhase,u=tau,a=a,b=b,eta=eta,innerProd=innerProd,s=s,dicType=dicType)
@@ -588,7 +598,9 @@ def adjustParameters(residue,parm):
         print("Invalid Dictionary Type")
 
 def updateResidue(residue,dicSize,parm):
-
+    if (parm.dicType == 3):
+        realAtom = np.zeros(dicSize)
+        realAtom[parm.u] = 1
     if (parm.dicType == 4):
         dic = Dictionary.GabDic()
         dic.setSignalSize(dicSize)
@@ -626,11 +638,10 @@ def updateResidue(residue,dicSize,parm):
     return residue
 
 
-
-
     
 
-inputFile = 'eda1.wav'
+# inputFile = 'edaCvx1.wav'
+# print(sys.argv)
 #inputFile= 'Sample_Bate.wav'
 def decompEDA(inputFile):
 
@@ -663,7 +674,7 @@ def decompEDA(inputFile):
         finalBlock=numBlock
     
     #Creating a sba File
-    f=open(str(inputFile)+'_b'+str(initBlock)+'-'+str(finalBlock)+'.sba','w')
+    f=open(str(inputFile).split(".")[0]+'_b'+str(initBlock)+'-'+str(finalBlock)+'.sba','w')
 
     f.write(f"Sign. Type :          {decompData.getSigType():5d}\n")               
     f.write(f"No. Signals:          {1:5d}\n") #Change if the signal has 2 or more channels
@@ -732,7 +743,7 @@ def decompEDA(inputFile):
             #plt.plot(residue)
             #plt.title("{norm}".format(norm=np.linalg.norm(residue)))
             #plt.show()
-            print("initBlockNorm:  {blockNorm}".format(blockNorm=initBlockNorm))
+           
 
             signal=residue
             
@@ -786,10 +797,20 @@ def decompEDA(inputFile):
                     endFlag=1
                 if ( endFlag==1):
                     f.write(f"99999\n")
+                    if ( j == finalBlock):
+                        f.write(f"88888\n")
                     break
+
+                print("Bloco:  {j} ----- step: {step}".format(j=j,step=step))
     f.close()
 
-
+parser = argparse.ArgumentParser( 
+    description="Read file"
+)
+parser.add_argument("filename",help="Path to a file to process")
+args = parser.parse_args()
+print(args.filename)
+inputFile = args.filename
 start = timeit.default_timer()
 
 decompEDA(inputFile)

@@ -1,5 +1,6 @@
 Scale WinShift FreqDiscr InitFreq(Hz) FinalFreq(Hz)   DicType    Decay      Rise 
-XXXXX    XXXXX        XX  XXXXXXXXXX    XXXXXXXXXX       XX      XXXXX      XXXXX 
+XXXXX    XXXXX        XX  XXXXXXXXXX    XXXXXXXXXX       XX      XXXXX      XXXXX
+2.500        1         1  0000000000    9999999999        6       0.40       0.58  
 4.000        1         1  0000000000    9999999999        6       0.25       0.40 
 2.857        1         1  0000000000    9999999999        6       0.35       0.40 
 1.818        1         1  0000000000    9999999999        6       0.55       0.70 

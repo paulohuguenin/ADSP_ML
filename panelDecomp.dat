@@ -4,7 +4,7 @@ Tipo de MP                                       3 (0 - Automático, 1 - MP Clá
 Dicionario                                       0 (0 - Todos, 1 - Exponenciais, 2 - Senoides, 3 - Gabor, 4 - Impulsos)
 Usa OMP                                          0
 Usa rede                                         0
-Num. maximo de iteracoes                         2 
+Num. maximo de iteracoes                       128
 Coeficiente suporte temporal                  1.05
 Usa heuristica bloco subsequente                 0
 Coef bloco subsequente                        1.15
