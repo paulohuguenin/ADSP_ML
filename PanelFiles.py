@@ -161,6 +161,7 @@ class FileDecompBlockRange():
 
     def __init__(self):
         
+        self.blockShift=0
         self.blockHop=512
         self.blockSize=512
         self.initBlock=1
@@ -174,7 +175,11 @@ class FileDecompBlockRange():
 
         #Empty Line
         string=f.readline()
-
+        
+        #Block Shift
+        string=f.readline()
+        self.blockShift=int(string[14:18])
+    
         #Block Hop
         string=f.readline()
         self.blockHop=int(string[39:50])
@@ -192,7 +197,10 @@ class FileDecompBlockRange():
         self.finalBlock=int(string[39:50])
 
         f.close()
-    
+
+    def getBlockShift(self):
+        return self.blockShift
+
     def getBlockHop(self):
         return self.blockHop
 

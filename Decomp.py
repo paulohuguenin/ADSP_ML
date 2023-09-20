@@ -21,54 +21,118 @@ from keras.models import load_model
 from scipy.io import wavfile
 from scipy import signal
 from scipy.signal.filter_design import normalize
+import pickle
 import Dictionary
 import PanelFiles
 import AtomClass
+import random
 
-def DANNO(residue,dicSize,chosenNet,step,L,approxRatio,net1,net2,net3):
+def meanfilt (x, k):
+    """Apply a length-k mean filter to a 1D array x.
+    Boundaries are extended by repeating endpoints.
+    """
+    
+    import numpy as np
+
+    assert k % 2 == 1, "Median filter length must be odd."
+    assert x.ndim == 1, "Input must be one-dimensional."
+    
+    k2 = (k - 1) // 2
+    y = np.zeros ((len (x), k), dtype=x.dtype)
+    y[:,k2] = x
+    for i in range (k2):
+        j = k2 - i
+        y[j:,i] = x[:-j]
+        y[:j,i] = x[0]
+        y[:-j,-(i+1)] = x[j:]
+        y[-j:,-(i+1)] = x[-1]
+    return np.mean (y, axis=1)
+
+def DANNO(residue,dicSize,chosenNet,step,L,approxRatio,scaler,net):
     """
     Function 
     """
+    # net1 = load_model('Net1.h5')
     chosenDic = 0
-    res=np.zeros((1,int(dicSize/8)))
+    chosenNet = 1
+    #res=np.zeros((1,len(residue)))
+    rnorm_filt = meanfilt(residue,5)
+    res_deci = [rnorm_filt[2*x] for x in np.arange(math.ceil(dicSize/2))]
+    res=np.array(res_deci/np.linalg.norm(res_deci))
+    # print(res)
+    # res= np.array([-0.77396318, -0.82797683, -0.83862953, -0.81757741, -0.7884076,  -0.77910115,
+    #       -0.78559452, -0.80611191, -0.83916568, -0.87090133 ,-0.88578607, -0.88425605,
+    #         -0.86898196, -0.84155393, -0.81575447, -0.80683332, -0.81187435, -0.81959605,
+    #         -0.8257263,  -0.82717006, -0.79882698, -0.71820677, -0.57311619, -0.37780129,
+    #         -0.140462,    0.11407679 , 0.36247867 , 0.57578135, 0.73167541 , 0.81896325,
+    #         0.85485999,  0.86415061,  0.87679394 , 0.91364173,  0.98644498,  1.09464304,
+    #         1.22284845  ,1.34257622 , 1.57872765 , 1.91960968  ,2.21455326 ,2.30969581,
+    #         2.25019162,  2.09439124 , 1.89425832 , 1.67431504 , 1.44855878  ,1.22536016,
+    #         1.01174278,  0.80490528 , 0.61875263 , 0.45763941 , 0.31142849 , 0.18529643,
+    #         0.07807497 ,-0.01340989  ,0.00304304 , 0.20978998,  0.50070031 , 0.67496933,
+    #         0.70563356 , 0.63860443,  0.51043874 , 0.32131794])
+    res = np.array([res])
+    res = scaler.transform(res)
+    # print(net.predict(res))
+    predDic = np.argmax(net.predict(res),axis=1)[0]
+    # print(f"predDic: {predDic}")
+    if (predDic==0):
+        chosenDic=4
+    elif (predDic==1):
+        chosenDic=6
+    elif (predDic==2):
+        chosenDic=7
+    else:
+        chosenDic=0
+        print("Dicionário Inválido DANNO")
+    #res[0] = meanfilt(res[0],5)
+    # print(f"chosenDic: {chosenDic}")
+    return chosenDic,chosenNet
+    
+# def DANNO(residue,dicSize,chosenNet,step,L,approxRatio,net1,net2,net3):
+#     """
+#     Function 
+#     """
+#     chosenDic = 0
+#     res=np.zeros((1,int(dicSize/8)))
 
-    res[0] = [residue[8*x] for x in np.arange(math.ceil(dicSize/8))]
-    res[0]=np.array(res[0]/np.linalg.norm(res[0]))
-    #print(res)
-    print(f"Diff ApproxRatio  {approxRatio[(step%L)-1] - approxRatio[(step%L)-2]}")
+#     res[0] = [residue[8*x] for x in np.arange(math.ceil(dicSize/8))]
+#     res[0]=np.array(res[0]/np.linalg.norm(res[0]))
+#     #print(res)
+#     print(f"Diff ApproxRatio  {approxRatio[(step%L)-1] - approxRatio[(step%L)-2]}")
 
-    if (step==0 or approxRatio[(step%L)-1] - approxRatio[(step%L)-2] <= -1e-1):
-        chosenNet = 1
-    elif ( approxRatio[(step%L)-1]-approxRatio[(step%L)-2] <= -5e-2 and approxRatio[(step%L)-1]-approxRatio[(step%L)-2] > -1e-1):
-        chosenNet = 2
-    elif ( approxRatio[(step%L)-1]-approxRatio[(step%L)-2] <= 0 and approxRatio[(step%L)-1]-approxRatio[(step%L)-2] > -5e-2 ):
-        chosenNet = 3
-    else:print("Invalid Net")
+#     if (step==0 or approxRatio[(step%L)-1] - approxRatio[(step%L)-2] <= -1e-1):
+#         chosenNet = 1
+#     elif ( approxRatio[(step%L)-1]-approxRatio[(step%L)-2] <= -5e-2 and approxRatio[(step%L)-1]-approxRatio[(step%L)-2] > -1e-1):
+#         chosenNet = 2
+#     elif ( approxRatio[(step%L)-1]-approxRatio[(step%L)-2] <= 0 and approxRatio[(step%L)-1]-approxRatio[(step%L)-2] > -5e-2 ):
+#         chosenNet = 3
+#     else:print("Invalid Net")
 
-    if (chosenNet == 1 or step == 0):          
-        # Load Neural Network 1
-        #net1 = load_model('Net1.h5')
-        predDic = net1.predict(res).round()
-    elif (chosenNet == 2):
-        #Load Neural Network 2
-        #net2 = load_model('Net2.h5')
-        predDic = net2.predict(res).round()
+#     if (chosenNet == 1 or step == 0):          
+#         # Load Neural Network 1
+#         #net1 = load_model('Net1.h5')
+#         predDic = net1.predict(res).round()
+#     elif (chosenNet == 2):
+#         #Load Neural Network 2
+#         #net2 = load_model('Net2.h5')
+#         predDic = net2.predict(res).round()
 
-    elif (chosenNet == 3):
-        #Load Neural Network 3
-        #net3 = load_model('Net3.h5')
-        predDic = net3.predict(res).round()
+#     elif (chosenNet == 3):
+#         #Load Neural Network 3
+#         #net3 = load_model('Net3.h5')
+#         predDic = net3.predict(res).round()
 
-    else:print("Invalid Net2")
+#     else:print("Invalid Net2")
     
 
-    if predDic.argmax()==0: chosenDic=6
-    elif predDic.argmax()==1: chosenDic=5
-    elif predDic.argmax()==2: chosenDic=4
-    else: print("Invalid Net1")
-    print(f"NetDic:    {chosenDic}\n")
-    return chosenDic ,chosenNet
-    #Comentário do Nicholas: Adicionar os 2 dicionário a DANNO depois
+#     if predDic.argmax()==0: chosenDic=6
+#     elif predDic.argmax()==1: chosenDic=5
+#     elif predDic.argmax()==2: chosenDic=4
+#     else: print("Invalid Net1")
+#     print(f"NetDic:    {chosenDic}\n")
+#     return chosenDic ,chosenNet
+#     #Comentário do Nicholas: Adicionar os 2 dicionário a DANNO depois
 
 def matchingPursuit(residue, chosenParm ,dicSize,dicData,decompData,step,chosenDic,dicAtoms,a0,b0,flagOMP,Fs):
    
@@ -144,6 +208,7 @@ def matchingPursuit(residue, chosenParm ,dicSize,dicData,decompData,step,chosenD
         N=dicSize
         #print("PA")
         if (chosenDic==dicType or chosenDic==0):
+           # print(f"ChosenDic MP:{chosenDic}")
            # print("PO")
            # print(f"MPDicCC:    {chosenDic}\n")
             #print(f"MPDic:    {dicType}\n")
@@ -651,22 +716,24 @@ def decompEDA(inputFile):
     signalSize=len(origSignal)
     blockRange=PanelFiles.FileDecompBlockRange()
     blockRange.loadData('panelBlockRange.dat')
-    
-
+   
     decompData=PanelFiles.FileDecomp()
     decompData.loadData('panelDecomp.dat')
     if ( decompData.getFlagML()==1):
-        net1 = load_model('Net1.h5')
-        net2 = load_model('Net2.h5')
-        net3 = load_model('Net3.h5')
+        scaler = pickle.load(open('scalerParamsComp70.pkl', 'rb'))
+        net1 = load_model('ModelNet70_128.h5')
+        # net2 = load_model('Net2.h5')
+        # net3 = load_model('Net3.h5')
 
     dicData=PanelFiles.FileDictionary()
     dicData.loadData('panelDictionary.dat')
 
     chosenDic=decompData.getDicType()
     chosenNet = 0
-    numBlock=math.ceil(len(origSignal)/blockRange.getBlockHop())
-
+    
+    numBlock=math.ceil(len(origSignal)/(blockRange.getBlockHop()))
+    #if ( (numBlock-1)*blockRange.getBlockHop()+blockRange.getBlockShift() > signalSize):
+    #    numBlock = numBlock-1
     initBlock= blockRange.getInitBlock()
     finalBlock= blockRange.getFinalBlock()
 
@@ -674,11 +741,12 @@ def decompEDA(inputFile):
         finalBlock=numBlock
     
     #Creating a sba File
-    f=open(str(inputFile).split(".")[0]+'_b'+str(initBlock)+'-'+str(finalBlock)+'.sba','w')
+    f=open(str(inputFile).split(".")[0]+'_b'+str(initBlock)+'-'+str(finalBlock) + '.sba','w')
 
     f.write(f"Sign. Type :          {decompData.getSigType():5d}\n")               
     f.write(f"No. Signals:          {1:5d}\n") #Change if the signal has 2 or more channels
     f.write(f"Signal Size:       {len(origSignal):8d}\n")
+    f.write(f"Block Shift:          {blockRange.getBlockShift():5d}\n")
     f.write(f"Block Hop:            {blockRange.getBlockHop():5d}\n")
     f.write(f"Block Size:           {blockRange.getBlockSize():5d}\n")
     f.write(f"Samp. Freq :     {Fs:10.2f}\n")
@@ -729,13 +797,16 @@ def decompEDA(inputFile):
             aftSupInnerP=0.0
             endFlag=0
 
-            if (j * blockRange.getBlockHop()+dicSize <= signalSize):
+            if (j * blockRange.getBlockHop()+dicSize+blockRange.getBlockShift()<= signalSize):
                 for i in np.arange(dicSize):
-                    residue[i]=origSignal[j*blockRange.getBlockHop()+i]#:j*blockRange.getBlockHop()+dicSize+i]
+                    residue[i]=origSignal[j*blockRange.getBlockHop()+i+blockRange.getBlockShift()]#:j*blockRange.getBlockHop()+dicSize+i]
                 
             else:
-                for i in np.arange(numBlock*dicSize-len(origSignal)):
-                    residue[i]=origSignal[j*blockRange.getBlockHop()+i]
+                print(j)
+                print(j*blockRange.getBlockHop())
+                print(len(origSignal)-(j*blockRange.getBlockHop()+dicSize))
+                for i in np.arange(abs(len(origSignal)-(j*blockRange.getBlockHop()+blockRange.getBlockShift()))):
+                    residue[i]=origSignal[j*blockRange.getBlockHop()+i-1]
                 
 
             initBlockNorm = np.linalg.norm(residue)
@@ -747,7 +818,6 @@ def decompEDA(inputFile):
 
             signal=residue
             
-
             f.write("--------------------------------------------------------------\n")
             f.write("Block:                    {b}\n".format(b=j+1))
             f.write("Norm:                     {blocknorm}\n".format(blocknorm=initBlockNorm))
@@ -758,8 +828,15 @@ def decompEDA(inputFile):
             for step in np.arange(nMaxStep):
 
                 if ( decompData.getFlagML()==1):
-                    chosenDic,chosenNet =  DANNO(residue,dicSize,chosenNet,step,L,approxRatio,net1,net2,net3)
-                
+                    # if (approxRatio[step%L-1] > 0.01 or step==0):
+                    chosenDic,chosenNet =  DANNO(residue,dicSize,chosenNet,step,L,approxRatio,scaler =scaler, net=net1)
+                        # chosenDic = random.choice([4,6,7])
+                        # chosenNet = 1
+                        # print(f"ChosenDic Net:{chosenDic}")
+                        # print(f"ChosenNet:{chosenNet}")
+                    # else:
+                    #     chosenDic = 0
+                    #     chosenNet = 0
                 matchingPursuit(residue, chosenParm,dicSize,dicData,decompData,step,chosenDic,dicAtoms,a0,b0,decompData.getFlagOMP(),Fs)
                 #print(chosenParm)
                 approxRatio[step % L] = math.fabs(chosenParm.innerProd/np.linalg.norm(residue))
@@ -797,7 +874,7 @@ def decompEDA(inputFile):
                     endFlag=1
                 if ( endFlag==1):
                     f.write(f"99999\n")
-                    if ( j == finalBlock):
+                    if ( j == finalBlock-1):
                         f.write(f"88888\n")
                     break
 

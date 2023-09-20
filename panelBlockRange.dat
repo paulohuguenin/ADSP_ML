@@ -1,6 +1,7 @@
-                                       XXXXXXXXXXX
-Salto de Bloco                                 512
-Tamanho do Bloco                               512
+      	                               XXXXXXXXXXX
+Block Shift					 0
+Salto de Bloco                                  64
+Tamanho do Bloco                               128
 Bloco inicial                                    1
 Bloco final                                   9999 (9999 - ate o ultimo bloco)
 B. Inicio  B. Final
